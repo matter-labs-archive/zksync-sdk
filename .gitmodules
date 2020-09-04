@@ -1,0 +1,3 @@
+[submodule "zks-crypto"]
+	path = zks-crypto
+	url = https://github.com/matter-labs/zks-crypto
