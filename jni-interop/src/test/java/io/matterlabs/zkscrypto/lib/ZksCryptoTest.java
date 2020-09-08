@@ -4,6 +4,8 @@ import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLong;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksSeedTooShortException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,14 +27,14 @@ class ZksCryptoTest {
     }
 
     @Test
-    void generatePrivateKey() {
+    void generatePrivateKey() throws ZksSeedTooShortException {
         ZksPrivateKey privateKey = cryptoLib.generatePrivateKey(SEED);
 
         assertArrayEquals(privateKey.getData(), new byte[] {1, 31, 91, -103, 8, 76, 92, 46, 45, 94, 99, 72, -114, 15, 113, 104, -43, -103, -91, -64, 31, -23, -2, -60, -55, -106, 5, 116, 61, -91, -24, 92});
     }
 
     @Test
-    void getPublicKey() {
+    void getPublicKey() throws ZksSeedTooShortException {
         ZksPrivateKey privateKey = cryptoLib.generatePrivateKey(SEED);
         ZksPackedPublicKey publicKey = cryptoLib.getPublicKey(privateKey);
 
@@ -40,7 +42,7 @@ class ZksCryptoTest {
     }
 
     @Test
-    void getPublicKeyHash() {
+    void getPublicKeyHash() throws ZksSeedTooShortException {
         ZksPrivateKey privateKey = cryptoLib.generatePrivateKey(SEED);
         ZksPackedPublicKey publicKey = cryptoLib.getPublicKey(privateKey);
         ZksPubkeyHash pubkeyHash = cryptoLib.getPublicKeyHash(publicKey);
@@ -49,11 +51,22 @@ class ZksCryptoTest {
     }
 
     @Test
-    void signMessage() {
+    void signMessage() throws ZksSeedTooShortException, ZksMusigTooLong {
         ZksPrivateKey privateKey = cryptoLib.generatePrivateKey(SEED);
         ZksSignature signature = cryptoLib.signMessage(privateKey, MSG);
 
         assertArrayEquals(signature.getData(), new byte[] {66, 111, 115, 126, -54, 53, 46, -4, 88, -107, 33, 63, -100, -36, -54, -112, -94, 98, 68, -8, 76, -62, -107, -64, 31, 0, 20, 92, 6, -56, 13, 37, 62, 28, -71, -3, 66, -73, 96, -128, -60, -45, 32, 85, -74, -119, -22, 62, 1, -27, 111, -104, -128, -29, -111, 47, -101, 27, -103, -63, -28, 91, 80, 4});
 
+    }
+
+    @Test
+    void mustThrowOnSeedTooShort() {
+        assertThrows(ZksSeedTooShortException.class, () -> cryptoLib.generatePrivateKey(new byte[0]));
+    }
+
+    @Test
+    void mustThrowOnMusigMessageTooLong() throws ZksSeedTooShortException {
+        ZksPrivateKey privateKey = cryptoLib.generatePrivateKey(SEED);
+        assertThrows(ZksMusigTooLong.class, () -> cryptoLib.signMessage(privateKey, Arrays.copyOf(MSG, 93)));
     }
 }

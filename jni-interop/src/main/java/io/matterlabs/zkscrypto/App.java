@@ -8,6 +8,8 @@ import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLong;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksSeedTooShortException;
 import org.web3j.utils.Numeric;
 
 import java.nio.charset.StandardCharsets;
@@ -21,16 +23,19 @@ public class App {
         byte[] seed = Arrays.copyOf(new byte[0], 32);
         byte[] msg = "hello".getBytes(StandardCharsets.UTF_8);
 
-        ZksPrivateKey privateKey = crypto.generatePrivateKey(seed);
-        ZksPackedPublicKey publicKey = crypto.getPublicKey(privateKey);
-        ZksPubkeyHash pubkeyHash = crypto.getPublicKeyHash(publicKey);
-        ZksSignature signature = crypto.signMessage(privateKey, msg);
-
-        System.out.printf("Seed: %s\n", Numeric.toHexString(seed));
-        System.out.printf("Private key: %s\n", Numeric.toHexString(privateKey.getData()));
-        System.out.printf("Public key: %s\n", Numeric.toHexString(publicKey.getData()));
-        System.out.printf("Public key hash: %s\n", Numeric.toHexString(pubkeyHash.getData()));
-        System.out.printf("Signature: %s\n", Numeric.toHexString(signature.getData()));
+        try {
+            ZksPrivateKey privateKey = crypto.generatePrivateKey(seed);
+            ZksPackedPublicKey publicKey = crypto.getPublicKey(privateKey);
+            ZksPubkeyHash pubkeyHash = crypto.getPublicKeyHash(publicKey);
+            ZksSignature signature = crypto.signMessage(privateKey, msg);
+            System.out.printf("Seed: %s\n", Numeric.toHexString(seed));
+            System.out.printf("Private key: %s\n", Numeric.toHexString(privateKey.getData()));
+            System.out.printf("Public key: %s\n", Numeric.toHexString(publicKey.getData()));
+            System.out.printf("Public key hash: %s\n", Numeric.toHexString(pubkeyHash.getData()));
+            System.out.printf("Signature: %s\n", Numeric.toHexString(signature.getData()));
+        } catch (ZksSeedTooShortException | ZksMusigTooLong e) {
+            System.err.println(e);
+        }
     }
 
 }

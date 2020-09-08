@@ -4,10 +4,15 @@ import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLong;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksSeedTooShortException;
 import jnr.ffi.LibraryLoader;
 import jnr.ffi.Platform;
 import jnr.ffi.Runtime;
 import jnr.ffi.Struct;
+
+import java.nio.file.Path;
+import java.util.Arrays;
 
 /**
  * Access to the ZksCrypto native library
@@ -16,11 +21,6 @@ import jnr.ffi.Struct;
  *
  */
 public final class ZksCrypto {
-
-    public static final Integer PACKED_SIGNATURE_LEN = 64;
-    public static final Integer PRIVATE_KEY_LEN = 32;
-    public static final Integer PUBKEY_HASH_LEN = 20;
-    public static final Integer PUBKEY_KEY_LEN = 32;
 
     private static final String LIBRARY_NAME;
 
@@ -47,19 +47,24 @@ public final class ZksCrypto {
 
     /**
      * Load and initiate ZksCrypto native library
+     * @param paths Custom paths to search ZksCrypto library binary
      *
      * @return ZksCrypto library instance
      */
-    public static ZksCrypto load() {
+    public static ZksCrypto load(Path ...paths) {
         ZksCrypto crypto = new ZksCrypto();
-        crypto.crypto = LibraryLoader
+        LibraryLoader<ZksCryptoNative> libraryLoader = LibraryLoader
                 .create(ZksCryptoNative.class)
                 .search("/usr/local/lib")
                 .search("/opt/local/lib")
                 .search("/usr/lib")
                 .search("/lib")
-                .search("../zks-crypto-c/target/release")
-                .load(LIBRARY_NAME);
+                .search("../zks-crypto/zks-crypto-c/target/release");
+        Arrays.stream(paths)
+                .map(Path::toAbsolutePath)
+                .map(Path::toString)
+                .forEach(libraryLoader::search);
+        crypto.crypto = libraryLoader.load(LIBRARY_NAME);
         crypto.runtime = Runtime.getRuntime(crypto.crypto);
         crypto.crypto.zks_crypto_init();
         return crypto;
@@ -71,13 +76,13 @@ public final class ZksCrypto {
      * @param seed for generation private key (length must be greater than 32 inclusive)
      * @return instance of private key container
      */
-    public ZksPrivateKey generatePrivateKey(byte[] seed) {
+    public ZksPrivateKey generatePrivateKey(byte[] seed) throws ZksSeedTooShortException {
         ZksPrivateKey privateKey = new ZksPrivateKey(this.runtime);
         int resultCode = this.crypto.zks_crypto_private_key_from_seed(seed, seed.length, Struct.getMemory(privateKey));
 
-        switch (resultCode) {
-            case 0: return privateKey;
-            case 1: throw new IllegalStateException("Given seed is too short, length must be greater than 32");
+        switch (ZksPrivateKey.ResultCode.fromCode(resultCode)) {
+            case SUCCESS: return privateKey;
+            case SEED_TOO_SHORT: throw new ZksSeedTooShortException("Given seed is too short, length must be greater than 32");
             default: throw new UnsupportedOperationException();
         }
     }
@@ -92,7 +97,7 @@ public final class ZksCrypto {
         ZksPackedPublicKey publicKey = new ZksPackedPublicKey(this.runtime);
         int resultCode = this.crypto.zks_crypto_private_key_to_public_key(Struct.getMemory(privateKey), Struct.getMemory(publicKey));
 
-        if (resultCode == 0) {
+        if (ZksPackedPublicKey.ResultCode.fromCode(resultCode) == ZksPackedPublicKey.ResultCode.SUCCESS) {
             return publicKey;
         }
         throw new UnsupportedOperationException();
@@ -108,7 +113,7 @@ public final class ZksCrypto {
         ZksPubkeyHash pubkeyHash = new ZksPubkeyHash(this.runtime);
         int resultCode = this.crypto.zks_crypto_public_key_to_pubkey_hash(Struct.getMemory(publicKey), Struct.getMemory(pubkeyHash));
 
-        if (resultCode == 0) {
+        if (ZksPubkeyHash.ResultCode.fromCode(resultCode) == ZksPubkeyHash.ResultCode.SUCCESS) {
             return pubkeyHash;
         }
         throw new UnsupportedOperationException();
@@ -121,13 +126,13 @@ public final class ZksCrypto {
      * @param message message for signing
      * @return instance of signature container
      */
-    public ZksSignature signMessage(final ZksPrivateKey privateKey, byte[] message) {
+    public ZksSignature signMessage(final ZksPrivateKey privateKey, byte[] message) throws ZksMusigTooLong {
         ZksSignature signature = new ZksSignature(this.runtime);
         int resultCode = this.crypto.zks_crypto_sign_musig(Struct.getMemory(privateKey), message, message.length, Struct.getMemory(signature));
 
-        switch (resultCode) {
-            case 0: return signature;
-            case 1: throw new IllegalStateException("Musig message is too long");
+        switch (ZksSignature.ResultCode.fromCode(resultCode)) {
+            case SUCCESS: return signature;
+            case MUSIG_MESSAGE_TOO_LONG: throw new ZksMusigTooLong("Musig message is too long");
             default: throw new UnsupportedOperationException();
         }
     }
