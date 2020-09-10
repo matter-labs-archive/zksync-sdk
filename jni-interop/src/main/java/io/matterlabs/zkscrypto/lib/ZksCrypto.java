@@ -4,7 +4,7 @@ import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
-import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLong;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLongException;
 import io.matterlabs.zkscrypto.lib.exceiption.ZksSeedTooShortException;
 import jnr.ffi.LibraryLoader;
 import jnr.ffi.Platform;
@@ -126,13 +126,13 @@ public final class ZksCrypto {
      * @param message message for signing
      * @return instance of signature container
      */
-    public ZksSignature signMessage(final ZksPrivateKey privateKey, byte[] message) throws ZksMusigTooLong {
+    public ZksSignature signMessage(final ZksPrivateKey privateKey, byte[] message) throws ZksMusigTooLongException {
         ZksSignature signature = new ZksSignature(this.runtime);
         int resultCode = this.crypto.zks_crypto_sign_musig(Struct.getMemory(privateKey), message, message.length, Struct.getMemory(signature));
 
         switch (ZksSignature.ResultCode.fromCode(resultCode)) {
             case SUCCESS: return signature;
-            case MUSIG_MESSAGE_TOO_LONG: throw new ZksMusigTooLong("Musig message is too long");
+            case MUSIG_MESSAGE_TOO_LONG: throw new ZksMusigTooLongException("Musig message is too long");
             default: throw new UnsupportedOperationException();
         }
     }

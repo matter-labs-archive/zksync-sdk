@@ -4,7 +4,7 @@ import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
-import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLong;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLongException;
 import io.matterlabs.zkscrypto.lib.exceiption.ZksSeedTooShortException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ class ZksCryptoTest {
     }
 
     @Test
-    void signMessage() throws ZksSeedTooShortException, ZksMusigTooLong {
+    void signMessage() throws ZksSeedTooShortException, ZksMusigTooLongException {
         ZksPrivateKey privateKey = cryptoLib.generatePrivateKey(SEED);
         ZksSignature signature = cryptoLib.signMessage(privateKey, MSG);
 
@@ -67,6 +67,6 @@ class ZksCryptoTest {
     @Test
     void mustThrowOnMusigMessageTooLong() throws ZksSeedTooShortException {
         ZksPrivateKey privateKey = cryptoLib.generatePrivateKey(SEED);
-        assertThrows(ZksMusigTooLong.class, () -> cryptoLib.signMessage(privateKey, Arrays.copyOf(MSG, 93)));
+        assertThrows(ZksMusigTooLongException.class, () -> cryptoLib.signMessage(privateKey, Arrays.copyOf(MSG, 93)));
     }
 }

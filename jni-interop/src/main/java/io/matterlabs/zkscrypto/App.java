@@ -8,7 +8,7 @@ import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
-import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLong;
+import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLongException;
 import io.matterlabs.zkscrypto.lib.exceiption.ZksSeedTooShortException;
 import org.web3j.utils.Numeric;
 
@@ -33,7 +33,7 @@ public class App {
             System.out.printf("Public key: %s\n", Numeric.toHexString(publicKey.getData()));
             System.out.printf("Public key hash: %s\n", Numeric.toHexString(pubkeyHash.getData()));
             System.out.printf("Signature: %s\n", Numeric.toHexString(signature.getData()));
-        } catch (ZksSeedTooShortException | ZksMusigTooLong e) {
+        } catch (ZksSeedTooShortException | ZksMusigTooLongException e) {
             System.err.println(e);
         }
     }
