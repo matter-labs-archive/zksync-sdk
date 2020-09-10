@@ -46,7 +46,7 @@ public final class ZksCrypto {
     }
 
     /**
-     * Load and initiate ZksCrypto native library
+     * Load and initialize ZksCrypto native library
      * @param paths Custom paths to search ZksCrypto library binary
      *
      * @return ZksCrypto library instance

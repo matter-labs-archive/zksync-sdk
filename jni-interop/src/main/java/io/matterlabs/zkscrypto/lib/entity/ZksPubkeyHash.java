@@ -2,9 +2,6 @@ package io.matterlabs.zkscrypto.lib.entity;
 
 import jnr.ffi.Runtime;
 import jnr.ffi.Struct;
-import org.apache.commons.lang.ArrayUtils;
-
-import java.util.Arrays;
 
 public final class ZksPubkeyHash extends Struct {
 
@@ -17,7 +14,11 @@ public final class ZksPubkeyHash extends Struct {
     }
 
     public byte[] getData() {
-        return ArrayUtils.toPrimitive(Arrays.stream(this.data).map(Struct.Unsigned8::byteValue).toArray(Byte[]::new));
+        byte[] dataRaw = new byte[this.data.length];
+        for (int i = 0; i < this.data.length; i++) {
+            dataRaw[i] = data[i].byteValue();
+        }
+        return dataRaw;
     }
 
     public enum ResultCode {
