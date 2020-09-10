@@ -8,9 +8,9 @@ import java.util.Arrays;
 
 public final class ZksPackedPublicKey extends Struct {
 
-    public static final Integer PUBKEY_KEY_LEN = 32;
+    public static final Integer PUBLIC_KEY_LEN = 32;
 
-    protected final Unsigned8[] data = super.array(new Unsigned8[PUBKEY_KEY_LEN]);
+    protected final Unsigned8[] data = super.array(new Unsigned8[PUBLIC_KEY_LEN]);
 
     public ZksPackedPublicKey(Runtime runtime) {
         super(runtime);
