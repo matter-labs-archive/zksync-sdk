@@ -59,7 +59,7 @@ public final class ZksCrypto {
                 .search("/opt/local/lib")
                 .search("/usr/lib")
                 .search("/lib")
-                .search("../zks-crypto/zks-crypto-c/target/release");
+                .search("../../zks-crypto/zks-crypto-c/target/release");
         Arrays.stream(paths)
                 .map(Path::toAbsolutePath)
                 .map(Path::toString)
