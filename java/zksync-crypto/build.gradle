@@ -27,7 +27,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName = 'io.matterlabs.zkscrypto.App'
+    mainClassName = 'io.matterlabs.zkscrypto.example.App'
 }
 
 test {
