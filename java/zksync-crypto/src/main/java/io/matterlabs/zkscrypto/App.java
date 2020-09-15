@@ -8,8 +8,9 @@ import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
-import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLongException;
-import io.matterlabs.zkscrypto.lib.exceiption.ZksSeedTooShortException;
+import io.matterlabs.zkscrypto.lib.exception.ZksMusigTooLongException;
+import io.matterlabs.zkscrypto.lib.exception.ZksSeedTooShortException;
+
 import org.web3j.utils.Numeric;
 
 import java.nio.charset.StandardCharsets;

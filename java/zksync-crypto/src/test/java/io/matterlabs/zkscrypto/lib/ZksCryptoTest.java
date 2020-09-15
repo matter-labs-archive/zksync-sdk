@@ -4,8 +4,9 @@ import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
 import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
-import io.matterlabs.zkscrypto.lib.exceiption.ZksMusigTooLongException;
-import io.matterlabs.zkscrypto.lib.exceiption.ZksSeedTooShortException;
+import io.matterlabs.zkscrypto.lib.exception.ZksMusigTooLongException;
+import io.matterlabs.zkscrypto.lib.exception.ZksSeedTooShortException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,4 @@
-package io.matterlabs.zkscrypto.lib.exceiption;
+package io.matterlabs.zkscrypto.lib.exception;
 
 public class ZksMusigTooLongException extends Exception {
     public ZksMusigTooLongException() {
