@@ -1,26 +1,17 @@
 package io.matterlabs.zkscrypto.lib.entity;
 
+import io.matterlabs.zkscrypto.lib.ZksCryptoStruct;
 import jnr.ffi.Runtime;
 import jnr.ffi.Struct;
 
-public final class ZksPubkeyHash extends Struct {
+public final class ZksPubkeyHash extends ZksCryptoStruct {
 
     public static final Integer PUBKEY_HASH_LEN = 20;
 
-    protected final Unsigned8[] data = super.array(new Unsigned8[PUBKEY_HASH_LEN]);
-
     public ZksPubkeyHash(Runtime runtime) {
-        super(runtime);
+        super(runtime, PUBKEY_HASH_LEN);
     }
-
-    public byte[] getData() {
-        byte[] dataRaw = new byte[this.data.length];
-        for (int i = 0; i < this.data.length; i++) {
-            dataRaw[i] = data[i].byteValue();
-        }
-        return dataRaw;
-    }
-
+    
     public enum ResultCode {
         SUCCESS;
 

@@ -1,24 +1,15 @@
 package io.matterlabs.zkscrypto.lib.entity;
 
+import io.matterlabs.zkscrypto.lib.ZksCryptoStruct;
 import jnr.ffi.Runtime;
 import jnr.ffi.Struct;
 
-public final class ZksSignature extends Struct {
+public final class ZksSignature extends ZksCryptoStruct {
 
     public static final Integer PACKED_SIGNATURE_LEN = 64;
 
-    protected final Unsigned8[] data = super.array(new Unsigned8[PACKED_SIGNATURE_LEN]);
-
-    public ZksSignature(Runtime runtime) {
-        super(runtime);
-    }
-
-    public byte[] getData() {
-        byte[] dataRaw = new byte[this.data.length];
-        for (int i = 0; i < this.data.length; i++) {
-            dataRaw[i] = data[i].byteValue();
-        }
-        return dataRaw;
+      public ZksSignature(Runtime runtime) {
+        super(runtime, PACKED_SIGNATURE_LEN);
     }
 
     public enum ResultCode {
