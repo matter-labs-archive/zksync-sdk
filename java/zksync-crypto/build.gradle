@@ -1,6 +1,6 @@
 plugins {
     // Apply the java plugin to add support for Java
-    id 'java'
+    id 'java-library'
 
     // Apply the application plugin to add support for building a CLI application.
     id 'application'
@@ -11,11 +11,17 @@ repositories {
     mavenCentral()
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 dependencies {
     // This dependency is used by the application.
     implementation group: 'com.google.guava', name: 'guava', version: '29.0-jre'
     implementation group: 'com.github.jnr', name: 'jnr-ffi', version: '2.1.16'
     implementation group: 'commons-lang', name: 'commons-lang', version: '2.6'
+    implementation group: 'org.scijava', name: 'native-lib-loader', version: '2.3.4'
     compile group: 'org.web3j', name: 'core', version: '5.0.0'
 
     // Use JUnit Jupiter API for testing.

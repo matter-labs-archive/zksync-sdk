@@ -1,0 +1,103 @@
+name: Build Java library
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build_native:
+    name: Build depends native library
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up Rust environment
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Install dependencies
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+      - name: Build project using cargo
+        run: cargo build --release
+        working-directory: zks-crypto/zks-crypto-c
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: zks-crypto-lib
+          path: zks-crypto/zks-crypto-c/target/release/*zks_crypto.*
+  test:
+    name: Test java project
+    runs-on: ubuntu-latest
+    needs: build_native
+    steps:
+      - uses: actions/checkout@v2
+      - name: Load native libraries
+        uses: actions/download-artifact@v2
+        with:
+          name: zks-crypto-lib
+          path: java/zksync-crypto
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Generate gradle wrapper
+        working-directory: java/zksync-crypto
+        run: ./gradlew wrapper
+      - name: Build with Gradle
+        working-directory: java/zksync-crypto
+        run: ./gradlew test
+  build:
+    name: Build jar library
+    runs-on: ubuntu-latest
+    needs: build_native
+    steps:
+      - uses: actions/checkout@v2
+      - name: Load native libraries
+        uses: actions/download-artifact@v2
+        with:
+          name: zks-crypto-lib
+          path: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/osx_64 && cp ./libzks_crypto.dylib ./src/main/resources/natives/osx_64
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/osx_32 && cp ./libzks_crypto.dylib ./src/main/resources/natives/osx_32
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/linux_64 && cp ./libzks_crypto.so ./src/main/resources/natives/linux_64
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/linux_32 && cp ./libzks_crypto.so ./src/main/resources/natives/linux_32
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/windows_64 && cp ./zks_crypto.dll ./src/main/resources/natives/windows_64
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/windows_32 && cp ./zks_crypto.dll ./src/main/resources/natives/windows_32
+        working-directory: java/zksync-crypto
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Build with Gradle
+        working-directory: java/zksync-crypto
+        run: ./gradlew build
+      - name: Save distribution
+        uses: actions/upload-artifact@v2
+        with:
+          name: zksync-crypto-java-dist
+          path: java/zksync-crypto/build/distributions/zksync-crypto.zip
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: zksync-crypto-java-dist
+          path: java/zksync-crypto/build/libs/*
+
+
+

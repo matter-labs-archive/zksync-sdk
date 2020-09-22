@@ -10,7 +10,9 @@ import jnr.ffi.LibraryLoader;
 import jnr.ffi.Platform;
 import jnr.ffi.Runtime;
 import jnr.ffi.Struct;
+import org.scijava.nativelib.NativeLoader;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 
@@ -43,6 +45,11 @@ public final class ZksCrypto {
                 LIBRARY_NAME = "zks_crypto";
                 break;
         }
+        try {
+            NativeLoader.loadLibrary("zks_crypto");
+        } catch (SecurityException e) {
+            throw new IllegalStateException("Cannot load native library", e);
+        } catch (IOException ignored) {}
     }
 
     /**
@@ -59,7 +66,9 @@ public final class ZksCrypto {
                 .search("/opt/local/lib")
                 .search("/usr/lib")
                 .search("/lib")
-                .search("../../zks-crypto/zks-crypto-c/target/release");
+                .search("../../zks-crypto/zks-crypto-c/target/release")
+                .search("./")
+                .searchDefault();
         Arrays.stream(paths)
                 .map(Path::toAbsolutePath)
                 .map(Path::toString)
