@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - master
+  push:
+    branches:
+      - develop
 
 jobs:
   build_native:
@@ -84,7 +87,7 @@ jobs:
           java-version: 1.8
       - name: Build with Maven
         working-directory: java/zksync-crypto
-        run: maven install
+        run: mvn install
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
