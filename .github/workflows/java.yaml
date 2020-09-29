@@ -52,12 +52,9 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Generate gradle wrapper
+      - name: Test with Maven
         working-directory: java/zksync-crypto
-        run: ./gradlew wrapper
-      - name: Build with Gradle
-        working-directory: java/zksync-crypto
-        run: ./gradlew test
+        run: mvn test
   build:
     name: Build jar library
     runs-on: ubuntu-latest
@@ -85,19 +82,14 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Build with Gradle
+      - name: Build with Maven
         working-directory: java/zksync-crypto
-        run: ./gradlew build
-      - name: Save distribution
-        uses: actions/upload-artifact@v2
-        with:
-          name: zksync-crypto-java-dist
-          path: java/zksync-crypto/build/distributions/zksync-crypto.zip
+        run: maven install
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
           name: zksync-crypto-java-dist
-          path: java/zksync-crypto/build/libs/*
+          path: java/zksync-crypto/target/*.jar
 
 
 

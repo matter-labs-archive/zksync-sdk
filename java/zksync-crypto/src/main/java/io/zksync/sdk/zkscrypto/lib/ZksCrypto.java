@@ -1,11 +1,11 @@
-package io.matterlabs.zkscrypto.lib;
+package io.zksync.sdk.zkscrypto.lib;
 
-import io.matterlabs.zkscrypto.lib.entity.ZksPackedPublicKey;
-import io.matterlabs.zkscrypto.lib.entity.ZksPrivateKey;
-import io.matterlabs.zkscrypto.lib.entity.ZksPubkeyHash;
-import io.matterlabs.zkscrypto.lib.entity.ZksSignature;
-import io.matterlabs.zkscrypto.lib.exception.ZksMusigTooLongException;
-import io.matterlabs.zkscrypto.lib.exception.ZksSeedTooShortException;
+import io.zksync.sdk.zkscrypto.lib.entity.ZksPackedPublicKey;
+import io.zksync.sdk.zkscrypto.lib.entity.ZksPrivateKey;
+import io.zksync.sdk.zkscrypto.lib.entity.ZksPubkeyHash;
+import io.zksync.sdk.zkscrypto.lib.entity.ZksSignature;
+import io.zksync.sdk.zkscrypto.lib.exception.ZksMusigTooLongException;
+import io.zksync.sdk.zkscrypto.lib.exception.ZksSeedTooShortException;
 import jnr.ffi.LibraryLoader;
 import jnr.ffi.Platform;
 import jnr.ffi.Runtime;

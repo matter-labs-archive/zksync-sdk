@@ -1,4 +1,4 @@
-package io.matterlabs.zkscrypto.lib;
+package io.zksync.sdk.zkscrypto.lib;
 
 import jnr.ffi.Pointer;
 import jnr.ffi.annotations.In;

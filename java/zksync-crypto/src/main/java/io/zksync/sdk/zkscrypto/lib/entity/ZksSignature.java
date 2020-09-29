@@ -1,8 +1,7 @@
-package io.matterlabs.zkscrypto.lib.entity;
+package io.zksync.sdk.zkscrypto.lib.entity;
 
-import io.matterlabs.zkscrypto.lib.ZksCryptoStruct;
+import io.zksync.sdk.zkscrypto.lib.ZksCryptoStruct;
 import jnr.ffi.Runtime;
-import jnr.ffi.Struct;
 
 public final class ZksSignature extends ZksCryptoStruct {
 
