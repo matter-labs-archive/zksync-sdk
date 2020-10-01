@@ -1,14 +1,16 @@
 package io.zksync.sdk.zkscrypto.lib.entity;
 
+import com.sun.jna.Structure;
 import io.zksync.sdk.zkscrypto.lib.ZksCryptoStruct;
-import jnr.ffi.Runtime;
 
-public final class ZksPubkeyHash extends ZksCryptoStruct {
+public class ZksPubkeyHash extends ZksCryptoStruct {
 
     public static final Integer PUBKEY_HASH_LEN = 20;
 
-    public ZksPubkeyHash(Runtime runtime) {
-        super(runtime, PUBKEY_HASH_LEN);
+    public static class ByReference extends ZksPubkeyHash implements Structure.ByReference { }
+
+    private ZksPubkeyHash() {
+        super(new byte[PUBKEY_HASH_LEN]);
     }
     
     public enum ResultCode {

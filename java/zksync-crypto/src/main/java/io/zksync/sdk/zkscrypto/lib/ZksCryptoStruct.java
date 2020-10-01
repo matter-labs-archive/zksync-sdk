@@ -1,33 +1,25 @@
 package io.zksync.sdk.zkscrypto.lib;
 
-import jnr.ffi.Runtime;
-import jnr.ffi.Struct;
+import com.sun.jna.Structure;
 
-public abstract class ZksCryptoStruct extends Struct {
-    protected final Unsigned8[] data;
-    protected byte[] cachedData;
+import java.util.Collections;
+import java.util.List;
 
-    protected ZksCryptoStruct(Runtime runtime, int dataLength) {
-        super(runtime);
-        data = super.array(new Unsigned8[dataLength]);
+public abstract class ZksCryptoStruct extends Structure {
+
+    protected ZksCryptoStruct(byte[] data) {
+        this.data = data;
     }
 
-    protected void flushCachedValues() {
-        this.cachedData = null;
-    }
+    public byte[] data;
 
     public byte[] getData() {
-        while (cachedData == null) {
-            synchronized (this) {
-                if (cachedData == null) {
-                    cachedData = new byte[this.data.length];
-                    for (int i = 0; i < this.data.length; i++) {
-                        cachedData[i] = data[i].byteValue();
-                    }
-                }
-            }
-        }
-        return cachedData;
+        return data;
+    }
+
+    @Override
+    protected List<String> getFieldOrder() {
+        return Collections.singletonList("data");
     }
 
 }

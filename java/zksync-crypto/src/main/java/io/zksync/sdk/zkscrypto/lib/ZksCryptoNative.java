@@ -1,34 +1,35 @@
 package io.zksync.sdk.zkscrypto.lib;
 
-import jnr.ffi.Pointer;
-import jnr.ffi.annotations.In;
-import jnr.ffi.annotations.Out;
-import jnr.ffi.types.ssize_t;
+import com.sun.jna.Library;
+import io.zksync.sdk.zkscrypto.lib.entity.ZksPackedPublicKey;
+import io.zksync.sdk.zkscrypto.lib.entity.ZksPrivateKey;
+import io.zksync.sdk.zkscrypto.lib.entity.ZksPubkeyHash;
+import io.zksync.sdk.zkscrypto.lib.entity.ZksSignature;
 
-public interface ZksCryptoNative {
+public interface ZksCryptoNative extends Library {
 
     void zks_crypto_init();
 
     int zks_crypto_private_key_from_seed(
-            @In byte[] seed,
-            @In @ssize_t long seed_len,
-            @Out Pointer private_key
+            byte[] seed,
+            long seed_len,
+            ZksPrivateKey.ByReference private_key
     );
 
     int zks_crypto_private_key_to_public_key(
-            @In Pointer private_key,
-            @Out Pointer public_key
+            ZksPrivateKey.ByReference private_key,
+            ZksPackedPublicKey.ByReference public_key
     );
 
     int zks_crypto_public_key_to_pubkey_hash(
-            @In Pointer public_key,
-            @Out Pointer pubkey_hash
+            ZksPackedPublicKey.ByReference public_key,
+            ZksPubkeyHash.ByReference pubkey_hash
     );
 
     int zks_crypto_sign_musig(
-            @In Pointer private_key,
-            @In byte[] seed,
-            @In @ssize_t long seed_len,
-            @Out Pointer signature
+            ZksPrivateKey.ByReference private_key,
+            byte[] seed,
+            long seed_len,
+            ZksSignature.ByReference signature
     );
 }

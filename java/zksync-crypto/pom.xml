@@ -4,11 +4,11 @@
 
     <groupId>io.zksync.sdk</groupId>
     <artifactId>zkscrypto</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.22-SNAPSHOT</version>
 
     <name>ZkSync Crypto</name>
     <description>Cryptographical primitives used in zkSync network.</description>
-    <packaging>jar</packaging>
+    <packaging>${package}</packaging>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -28,21 +28,112 @@
             <url>https://www.mit.edu/~amini/LICENSE.md</url>
         </license>
     </licenses>
+
+    <profiles>
+        <profile>
+            <id>Java</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <package>jar</package>
+            </properties>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <includes>
+                            <include>**/*.so</include>
+                            <include>**/*.dll</include>
+                            <include>**/*.dylib</include>
+                        </includes>
+                    </resource>
+                </resources>
+            </build>
+        </profile>
+        <profile>
+            <id>Android</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <package>aar</package>
+            </properties>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>com.simpligility.maven.plugins</groupId>
+                            <artifactId>android-maven-plugin</artifactId>
+                            <version>4.6.0</version>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+                <plugins>
+                    <plugin>
+                        <groupId>com.simpligility.maven.plugins</groupId>
+                        <artifactId>android-maven-plugin</artifactId>
+                        <version>4.6.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <sdk>
+                                <platform>29</platform>
+                            </sdk>
+                            <dexCompiler>d8</dexCompiler>
+                            <d8>
+                                <minApi>26</minApi>
+                            </d8>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>javax.xml.bind</groupId>
+                                <artifactId>jaxb-api</artifactId>
+                                <version>2.3.1</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.glassfish.jaxb</groupId>
+                                <artifactId>jaxb-runtime</artifactId>
+                                <version>2.3.2</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>com.google.android</groupId>
+                    <artifactId>android</artifactId>
+                    <version>4.1.1.4</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
+    <distributionManagement>
+
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+
+    </distributionManagement>
+
     <dependencies>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>29.0-jre</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.jnr</groupId>
-            <artifactId>jnr-ffi</artifactId>
-            <version>2.1.16</version>
-        </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
             <version>2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.scijava</groupId>
@@ -59,45 +150,15 @@
             <artifactId>junit-jupiter-api</artifactId>
             <version>5.6.2</version>
         </dependency>
-        <dependency>
-            <groupId>org.web3j</groupId>
-            <artifactId>core</artifactId>
-            <version>5.0.0</version>
-        </dependency>
     </dependencies>
 
-    <distributionManagement>
-
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-
-    </distributionManagement>
-
     <build>
-
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*.so</include>
-                    <include>**/*.dll</include>
-                    <include>**/*.dylib</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <version>1.6.7</version>
-                <extensions>true</extensions>
+                <extensions>false</extensions>
                 <configuration>
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
@@ -117,33 +178,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-javadoc-plugin</artifactId>-->
-<!--                <version>2.9.1</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>attach-javadocs</id>-->
-<!--                        <goals>-->
-<!--                            <goal>jar</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-gpg-plugin</artifactId>-->
-<!--                <version>1.5</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>sign-artifacts</id>-->
-<!--                        <phase>verify</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>sign</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
         </plugins>
 
     </build>

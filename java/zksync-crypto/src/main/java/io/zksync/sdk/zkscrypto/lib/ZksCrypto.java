@@ -1,20 +1,19 @@
 package io.zksync.sdk.zkscrypto.lib;
 
+import com.sun.jna.Native;
+import com.sun.jna.NativeLibrary;
 import io.zksync.sdk.zkscrypto.lib.entity.ZksPackedPublicKey;
 import io.zksync.sdk.zkscrypto.lib.entity.ZksPrivateKey;
 import io.zksync.sdk.zkscrypto.lib.entity.ZksPubkeyHash;
 import io.zksync.sdk.zkscrypto.lib.entity.ZksSignature;
 import io.zksync.sdk.zkscrypto.lib.exception.ZksMusigTooLongException;
 import io.zksync.sdk.zkscrypto.lib.exception.ZksSeedTooShortException;
-import jnr.ffi.LibraryLoader;
-import jnr.ffi.Platform;
-import jnr.ffi.Runtime;
-import jnr.ffi.Struct;
+import org.scijava.nativelib.BaseJniExtractor;
+import org.scijava.nativelib.NativeLibraryUtil;
 import org.scijava.nativelib.NativeLoader;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Arrays;
 
 /**
  * Access to the ZksCrypto native library
@@ -24,29 +23,17 @@ import java.util.Arrays;
  */
 public final class ZksCrypto {
 
-    private static final String LIBRARY_NAME;
+    private static final String LIBRARY_NAME = "zks_crypto";
 
     private ZksCryptoNative crypto;
-    private Runtime runtime;
 
     private ZksCrypto() {}
 
     static {
         try {
-            Class.forName("jnr.ffi.Platform");
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("JNR-FFI is not available on the classpath, see https://github.com/jnr/jnr-ffi");
-        }
-        switch (Platform.getNativePlatform().getOS()) {
-            case WINDOWS:
-                LIBRARY_NAME = "libzks_crypto";
-                break;
-            default:
-                LIBRARY_NAME = "zks_crypto";
-                break;
-        }
-        try {
-            NativeLoader.loadLibrary("zks_crypto");
+            NativeLoader.loadLibrary(LIBRARY_NAME);
+            NativeLibrary.addSearchPath(LIBRARY_NAME, ((BaseJniExtractor) NativeLoader.getJniExtractor()).getJniDir().getAbsolutePath());
+            NativeLibrary.addSearchPath(LIBRARY_NAME, ((BaseJniExtractor) NativeLoader.getJniExtractor()).getNativeDir().getAbsolutePath());
         } catch (SecurityException e) {
             throw new IllegalStateException("Cannot load native library", e);
         } catch (IOException ignored) {}
@@ -54,27 +41,12 @@ public final class ZksCrypto {
 
     /**
      * Load and initialize ZksCrypto native library
-     * @param paths Custom paths to search ZksCrypto library binary
      *
      * @return ZksCrypto library instance
      */
-    public static ZksCrypto load(Path ...paths) {
+    public static ZksCrypto load() {
         ZksCrypto crypto = new ZksCrypto();
-        LibraryLoader<ZksCryptoNative> libraryLoader = LibraryLoader
-                .create(ZksCryptoNative.class)
-                .search("/usr/local/lib")
-                .search("/opt/local/lib")
-                .search("/usr/lib")
-                .search("/lib")
-                .search("../../zks-crypto/zks-crypto-c/target/release")
-                .search("./")
-                .searchDefault();
-        Arrays.stream(paths)
-                .map(Path::toAbsolutePath)
-                .map(Path::toString)
-                .forEach(libraryLoader::search);
-        crypto.crypto = libraryLoader.load(LIBRARY_NAME);
-        crypto.runtime = Runtime.getRuntime(crypto.crypto);
+        crypto.crypto = Native.load(LIBRARY_NAME, ZksCryptoNative.class);
         crypto.crypto.zks_crypto_init();
         return crypto;
     }
@@ -86,9 +58,8 @@ public final class ZksCrypto {
      * @return instance of private key container
      */
     public ZksPrivateKey generatePrivateKey(byte[] seed) throws ZksSeedTooShortException {
-        ZksPrivateKey privateKey = new ZksPrivateKey(this.runtime);
-        int resultCode = this.crypto.zks_crypto_private_key_from_seed(seed, seed.length, Struct.getMemory(privateKey));
-
+        ZksPrivateKey.ByReference privateKey = new ZksPrivateKey.ByReference();
+        int resultCode = this.crypto.zks_crypto_private_key_from_seed(seed, seed.length, privateKey);
         switch (ZksPrivateKey.ResultCode.fromCode(resultCode)) {
             case SUCCESS: return privateKey;
             case SEED_TOO_SHORT: throw new ZksSeedTooShortException("Given seed is too short, length must be greater than 32");
@@ -103,8 +74,8 @@ public final class ZksCrypto {
      * @return  instance of public key container
      */
     public ZksPackedPublicKey getPublicKey(final ZksPrivateKey privateKey) {
-        ZksPackedPublicKey publicKey = new ZksPackedPublicKey(this.runtime);
-        int resultCode = this.crypto.zks_crypto_private_key_to_public_key(Struct.getMemory(privateKey), Struct.getMemory(publicKey));
+        ZksPackedPublicKey.ByReference publicKey = new ZksPackedPublicKey.ByReference();
+        int resultCode = this.crypto.zks_crypto_private_key_to_public_key((ZksPrivateKey.ByReference) privateKey, publicKey);
 
         if (ZksPackedPublicKey.ResultCode.fromCode(resultCode) == ZksPackedPublicKey.ResultCode.SUCCESS) {
             return publicKey;
@@ -119,8 +90,8 @@ public final class ZksCrypto {
      * @return  instance of public key hash container
      */
     public ZksPubkeyHash getPublicKeyHash(final ZksPackedPublicKey publicKey) {
-        ZksPubkeyHash pubkeyHash = new ZksPubkeyHash(this.runtime);
-        int resultCode = this.crypto.zks_crypto_public_key_to_pubkey_hash(Struct.getMemory(publicKey), Struct.getMemory(pubkeyHash));
+        ZksPubkeyHash.ByReference pubkeyHash = new ZksPubkeyHash.ByReference();
+        int resultCode = this.crypto.zks_crypto_public_key_to_pubkey_hash((ZksPackedPublicKey.ByReference) publicKey, pubkeyHash);
 
         if (ZksPubkeyHash.ResultCode.fromCode(resultCode) == ZksPubkeyHash.ResultCode.SUCCESS) {
             return pubkeyHash;
@@ -136,14 +107,18 @@ public final class ZksCrypto {
      * @return instance of signature container
      */
     public ZksSignature signMessage(final ZksPrivateKey privateKey, byte[] message) throws ZksMusigTooLongException {
-        ZksSignature signature = new ZksSignature(this.runtime);
-        int resultCode = this.crypto.zks_crypto_sign_musig(Struct.getMemory(privateKey), message, message.length, Struct.getMemory(signature));
+        ZksSignature.ByReference signature =  new ZksSignature.ByReference();
+        int resultCode = this.crypto.zks_crypto_sign_musig((ZksPrivateKey.ByReference) privateKey, message, message.length, signature);
 
         switch (ZksSignature.ResultCode.fromCode(resultCode)) {
             case SUCCESS: return signature;
             case MUSIG_MESSAGE_TOO_LONG: throw new ZksMusigTooLongException("Musig message is too long");
             default: throw new UnsupportedOperationException();
         }
+    }
+
+    private static String getLibraryClasspathName() {
+        return "/" + NativeLibraryUtil.getPlatformLibraryPath(NativeLibraryUtil.DEFAULT_SEARCH_PATH) + NativeLibraryUtil.getPlatformLibraryName("zks_crypto");
     }
 
 }
