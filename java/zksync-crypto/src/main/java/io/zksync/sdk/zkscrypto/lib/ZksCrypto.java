@@ -9,10 +9,8 @@ import io.zksync.sdk.zkscrypto.lib.entity.ZksSignature;
 import io.zksync.sdk.zkscrypto.lib.exception.ZksMusigTooLongException;
 import io.zksync.sdk.zkscrypto.lib.exception.ZksSeedTooShortException;
 import org.scijava.nativelib.BaseJniExtractor;
-import org.scijava.nativelib.NativeLibraryUtil;
 import org.scijava.nativelib.NativeLoader;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -115,10 +113,6 @@ public final class ZksCrypto {
             case MUSIG_MESSAGE_TOO_LONG: throw new ZksMusigTooLongException("Musig message is too long");
             default: throw new UnsupportedOperationException();
         }
-    }
-
-    private static String getLibraryClasspathName() {
-        return "/" + NativeLibraryUtil.getPlatformLibraryPath(NativeLibraryUtil.DEFAULT_SEARCH_PATH) + NativeLibraryUtil.getPlatformLibraryName("zks_crypto");
     }
 
 }

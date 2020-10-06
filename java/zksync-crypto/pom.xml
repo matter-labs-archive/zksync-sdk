@@ -4,7 +4,7 @@
 
     <groupId>io.zksync.sdk</groupId>
     <artifactId>zkscrypto</artifactId>
-    <version>0.0.22-SNAPSHOT</version>
+    <version>${env.APP_VERSION}</version>
 
     <name>ZkSync Crypto</name>
     <description>Cryptographical primitives used in zkSync network.</description>

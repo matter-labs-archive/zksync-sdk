@@ -55,17 +55,20 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 13
-      - name: Generate gradle wrapper
-        working-directory: java/zksync-crypto
-        run: ./gradlew wrapper
       - name: Build with Gradle
         working-directory: java/zksync-crypto
-        run: ./gradlew test
-  build:
+        run: mvn test
+  build_and_publish:
     name: Build jar library
     runs-on: ubuntu-latest
     needs: build_native
     steps:
+      - name: Query app version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using app version ${GITHUB_REF:11}"
+          echo ::set-output name=app::"${GITHUB_REF:11}"
       - uses: actions/checkout@v2
       - name: Load native libraries
         uses: actions/download-artifact@v2
@@ -88,22 +91,29 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 13
-      - name: Build with Gradle
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+      - name: Build with Maven
         working-directory: java/zksync-crypto
-        run: ./gradlew build
+        run: mvn install
+        env:
+          APP_VERSION: ${{ steps.get_version.outputs.APP }}
       - name: Save distribution
         uses: actions/upload-artifact@v2
         with:
           name: zksync-crypto-java-dist
-          path: java/zksync-crypto/build/distributions/zksync-crypto.zip
-      - name: Save artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: zksync-crypto-java-dist
-          path: java/zksync-crypto/build/libs/*
+          path: java/zksync-crypto/target/*.jar
+      - name: Publish package
+        working-directory: java/zksync-crypto
+        run: mvn clean deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          APP_VERSION: ${{ steps.get_version.outputs.APP }}
   release:
     name: Github release
-    needs: build
+    needs: build_and_publish
     runs-on: ubuntu-latest
     steps:
       - name: Query version number
@@ -112,6 +122,7 @@ jobs:
         run: |
           echo "using version tag ${GITHUB_REF:10}"
           echo ::set-output name=version::"${GITHUB_REF:10}"
+          echo ::set-output name=app::"${GITHUB_REF:11}"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -130,7 +141,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./zksync-crypto.zip
-          asset_content_type: application/zip
-          asset_name: zksync-crypto-${{ steps.get_version.outputs.VERSION }}.zip
+          asset_path: ./zkscrypto-${{ steps.get_version.outputs.APP }}.jar
+          asset_content_type: application/java-archive
+          asset_name: zksync-crypto.jar
+      - name: Release Java library sources
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./zkscrypto-${{ steps.get_version.outputs.APP }}-sources.jar
+          asset_content_type: application/java-archive
+          asset_name: zksync-crypto-sources.jar
 
