@@ -1,15 +1,16 @@
-package io.matterlabs.zkscrypto.lib.entity;
+package io.zksync.sdk.zkscrypto.lib.entity;
 
-import io.matterlabs.zkscrypto.lib.ZksCryptoStruct;
-import jnr.ffi.Runtime;
-import jnr.ffi.Struct;
+import com.sun.jna.Structure;
+import io.zksync.sdk.zkscrypto.lib.ZksCryptoStruct;
 
-public final class ZksSignature extends ZksCryptoStruct {
+public class ZksSignature extends ZksCryptoStruct {
 
     public static final Integer PACKED_SIGNATURE_LEN = 64;
 
-      public ZksSignature(Runtime runtime) {
-        super(runtime, PACKED_SIGNATURE_LEN);
+    public static class ByReference extends ZksSignature implements Structure.ByReference { }
+
+    private ZksSignature() {
+        super(new byte[PACKED_SIGNATURE_LEN]);
     }
 
     public enum ResultCode {

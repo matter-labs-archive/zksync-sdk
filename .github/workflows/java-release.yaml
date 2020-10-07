@@ -1,0 +1,156 @@
+name: Release Java library
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  GITHUB_REF: "${{ github.ref }}"
+
+jobs:
+  build_native:
+    name: Build depends native library
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up Rust environment
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Install dependencies
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+      - name: Build project using cargo
+        run: cargo build --release
+        working-directory: zks-crypto/zks-crypto-c
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: zks-crypto-lib
+          path: zks-crypto/zks-crypto-c/target/release/*zks_crypto.*
+  test:
+    name: Test java project
+    runs-on: ubuntu-latest
+    needs: build_native
+    steps:
+      - uses: actions/checkout@v2
+      - name: Load native libraries
+        uses: actions/download-artifact@v2
+        with:
+          name: zks-crypto-lib
+          path: java/zksync-crypto
+      - name: Set up JDK 13
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13
+      - name: Build with Gradle
+        working-directory: java/zksync-crypto
+        run: mvn test
+  build_and_publish:
+    name: Build jar library
+    runs-on: ubuntu-latest
+    needs: build_native
+    steps:
+      - name: Query app version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using app version ${GITHUB_REF:11}"
+          echo ::set-output name=app::"${GITHUB_REF:11}"
+      - uses: actions/checkout@v2
+      - name: Load native libraries
+        uses: actions/download-artifact@v2
+        with:
+          name: zks-crypto-lib
+          path: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/osx_64 && cp ./libzks_crypto.dylib ./src/main/resources/natives/osx_64
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/osx_32 && cp ./libzks_crypto.dylib ./src/main/resources/natives/osx_32
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/linux_64 && cp ./libzks_crypto.so ./src/main/resources/natives/linux_64
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/linux_32 && cp ./libzks_crypto.so ./src/main/resources/natives/linux_32
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/windows_64 && cp ./zks_crypto.dll ./src/main/resources/natives/windows_64
+        working-directory: java/zksync-crypto
+      - run: mkdir -p ./src/main/resources/natives/windows_32 && cp ./zks_crypto.dll ./src/main/resources/natives/windows_32
+        working-directory: java/zksync-crypto
+      - name: Set up JDK 13
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+      - name: Build with Maven
+        working-directory: java/zksync-crypto
+        run: mvn install
+        env:
+          APP_VERSION: ${{ steps.get_version.outputs.APP }}
+      - name: Save distribution
+        uses: actions/upload-artifact@v2
+        with:
+          name: zksync-crypto-java-dist
+          path: java/zksync-crypto/target/*.jar
+      - name: Publish package
+        working-directory: java/zksync-crypto
+        run: mvn clean deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          APP_VERSION: ${{ steps.get_version.outputs.APP }}
+  release:
+    name: Github release
+    needs: build_and_publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using version tag ${GITHUB_REF:10}"
+          echo ::set-output name=version::"${GITHUB_REF:10}"
+          echo ::set-output name=app::"${GITHUB_REF:11}"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: ${{ steps.get_version.outputs.VERSION }}
+      - name: Dowload distribution
+        uses: actions/download-artifact@v2
+        with:
+          name: zksync-crypto-java-dist
+      - name: Release Java library
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./zkscrypto-${{ steps.get_version.outputs.APP }}.jar
+          asset_content_type: application/java-archive
+          asset_name: zksync-crypto.jar
+      - name: Release Java library sources
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./zkscrypto-${{ steps.get_version.outputs.APP }}-sources.jar
+          asset_content_type: application/java-archive
+          asset_name: zksync-crypto-sources.jar
+

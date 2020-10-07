@@ -1,0 +1,98 @@
+name: Release Java library for Android
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  GITHUB_REF: "${{ github.ref }}"
+
+jobs:
+  build_native:
+    name: Build depends native library
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_NDK_HOME: /opt/android-ndk
+      ANDROID_NDK_VERSION: r21d
+    strategy:
+      matrix:
+        cfg:
+          - { target: aarch64-linux-android, name: arm64-v8a }
+          - { target: armv7-linux-androideabi, name: armeabi-v7a }
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up Rust environment
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Install Cargo-NDK
+        run: cargo install cargo-ndk && rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+      - name: Install NDK
+        shell: bash
+        run: mkdir /opt/android-ndk-tmp && cd /opt/android-ndk-tmp && wget -q https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.zip && unzip -q android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.zip && mv ./android-ndk-${ANDROID_NDK_VERSION} ${ANDROID_NDK_HOME} && cd ${ANDROID_NDK_HOME} && rm -rf /opt/android-ndk-tmp
+      - name: Build project using cargo
+        run: cargo ndk --platform 21 --target ${{ matrix.cfg.target }} build --release
+        working-directory: zks-crypto/zks-crypto-c
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: zks-crypto-lib-${{ matrix.cfg.name }}
+          path: zks-crypto/zks-crypto-c/target/${{ matrix.cfg.target }}/release/libzks_crypto.so
+  build_and_publish:
+    name: Build jar library
+    runs-on: ubuntu-latest
+    needs: build_native
+    steps:
+      - name: Query version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using app version ${GITHUB_REF:11}"
+          echo ::set-output name=app::"${GITHUB_REF:11}"
+      - uses: actions/checkout@v2
+      - name: Load native libraries for arm64-v8a
+        uses: actions/download-artifact@v2
+        with:
+          name: zks-crypto-lib-arm64-v8a
+          path: java/zksync-crypto/src/main/libs/arm64-v8a
+      - name: Load native libraries for armeabi-v7a
+        uses: actions/download-artifact@v2
+        with:
+          name: zks-crypto-lib-armeabi-v7a
+          path: java/zksync-crypto/src/main/libs/armeabi-v7a
+      - name: Set up JDK 13
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+      - name: Build with Maven
+        working-directory: java/zksync-crypto
+        run: mvn install -PAndroid -Dmaven.test.skip=true
+        env:
+          APP_VERSION: ${{ steps.get_version.outputs.APP }}
+      - name: Save distribution
+        uses: actions/upload-artifact@v2
+        with:
+          name: zksync-crypto-java-dist
+          path: java/zksync-crypto/target/*.aar
+      - name: Publish package
+        working-directory: java/zksync-crypto
+        run: mvn clean deploy -PAndroid -Dmaven.test.skip=true
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          APP_VERSION: ${{ steps.get_version.outputs.APP }}-android
