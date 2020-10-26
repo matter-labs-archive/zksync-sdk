@@ -386,6 +386,7 @@
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/ZKSyncSDK/libzks";
 				INFOPLIST_FILE = ZKSyncSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -396,16 +397,19 @@
 					"$(PROJECT_DIR)/ZKSyncSDK",
 					"$(PROJECT_DIR)/ZKSyncSDK/libzks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/ZKSyncSDK/ZKSyncSDK.modulemap";
 				MODULEMAP_PRIVATE_FILE = "";
-				PRODUCT_BUNDLE_IDENTIFIER = vareger.ZKSyncSDK;
+				PRODUCT_BUNDLE_IDENTIFIER = matter-labs.ZKSyncSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/ZKSyncSDK/libzks";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TVOS_DEPLOYMENT_TARGET = 10.0;
 				USER_HEADER_SEARCH_PATHS = "";
+				WATCHOS_DEPLOYMENT_TARGET = 3.0;
 			};
 			name = Debug;
 		};
@@ -423,6 +427,7 @@
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/ZKSyncSDK/libzks";
 				INFOPLIST_FILE = ZKSyncSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -433,15 +438,18 @@
 					"$(PROJECT_DIR)/ZKSyncSDK",
 					"$(PROJECT_DIR)/ZKSyncSDK/libzks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/ZKSyncSDK/ZKSyncSDK.modulemap";
 				MODULEMAP_PRIVATE_FILE = "";
-				PRODUCT_BUNDLE_IDENTIFIER = vareger.ZKSyncSDK;
+				PRODUCT_BUNDLE_IDENTIFIER = matter-labs.ZKSyncSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/ZKSyncSDK/libzks";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TVOS_DEPLOYMENT_TARGET = 10.0;
 				USER_HEADER_SEARCH_PATHS = "";
+				WATCHOS_DEPLOYMENT_TARGET = 3.0;
 			};
 			name = Release;
 		};
@@ -456,7 +464,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = vareger.ZKSyncSDKTests;
+				PRODUCT_BUNDLE_IDENTIFIER = matter-labs.ZKSyncSDKTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -474,7 +482,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = vareger.ZKSyncSDKTests;
+				PRODUCT_BUNDLE_IDENTIFIER = matter-labs.ZKSyncSDKTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
