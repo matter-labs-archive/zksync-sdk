@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ZKCryptoData {
+public class ZKPrimitive {
     class var bytesLength: Int {
         return 0
     }
@@ -41,25 +41,25 @@ public class ZKCryptoData {
     }
 }
 
-public class ZKPackedPublicKey: ZKCryptoData {
+public class ZKPackedPublicKey: ZKPrimitive {
     override class var bytesLength: Int {
         return 32
     }
 }
 
-public class ZKPrivateKey: ZKCryptoData {
+public class ZKPrivateKey: ZKPrimitive {
     override class var bytesLength: Int {
         return 32
     }
 }
 
-public class ZKPublicHash: ZKCryptoData {
+public class ZKPublicHash: ZKPrimitive {
     override class var bytesLength: Int {
         return 20
     }
 }
 
-public class ZKSignature: ZKCryptoData {
+public class ZKSignature: ZKPrimitive {
     override class var bytesLength: Int {
         return 64
     }
