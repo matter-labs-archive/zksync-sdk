@@ -1,5 +1,5 @@
 //
-//  ZksCryptoSecretKey.swift
+//  ZKSyncSDK+Types.swift
 //  ZKSyncSDK-UI
 //
 //  Made with ❤️ by Matter Labs on 10/23/20
@@ -7,10 +7,16 @@
 
 import Foundation
 
-public class ZKSecretKey {
+public class ZKCryptoData {
+    class var bytesLength: Int {
+        return 0
+    }
+    
     private var content: Data
     
     init(_ content: Data) {
+        assert(content.count == Self.bytesLength, "Incorrect data length. Should be \(Self.bytesLength)")
+
         self.content = content
     }
     
@@ -26,25 +32,37 @@ public class ZKSecretKey {
         return content.base64EncodedString()
     }
     
-    public func withUnsafeBytes<ResultType>(_ body: (UnsafeRawBufferPointer) throws -> ResultType) rethrows -> ResultType {
+    public func hexEncodedString() -> String {
+        return content.map { String(format: "%02hhX", $0) }.joined()
+    }
+    
+    func withUnsafeBytes<ResultType>(_ body: (UnsafeRawBufferPointer) throws -> ResultType) rethrows -> ResultType {
         return try! content.withUnsafeBytes(body)
     }
 }
 
-public class ZKPackedPublicKey: ZKSecretKey {
-    static let keyLength = 32
+public class ZKPackedPublicKey: ZKCryptoData {
+    override class var bytesLength: Int {
+        return 32
+    }
 }
 
-public class ZKPrivateKey: ZKSecretKey {
-    static let keyLength = 32
+public class ZKPrivateKey: ZKCryptoData {
+    override class var bytesLength: Int {
+        return 32
+    }
 }
 
-public class ZKPublicHash: ZKSecretKey {
-    static let keyLength = 20
+public class ZKPublicHash: ZKCryptoData {
+    override class var bytesLength: Int {
+        return 20
+    }
 }
 
-public class ZKSignature: ZKSecretKey {
-    static let keyLength = 64
+public class ZKSignature: ZKCryptoData {
+    override class var bytesLength: Int {
+        return 64
+    }
 }
 
 
@@ -58,3 +76,10 @@ public enum ZKSyncSDKResult<T> {
     case success(_ result: T)
     case error(_ error: Error)
 }
+
+
+typealias CLibZksPrivateKey = ZksPrivateKey
+typealias CLibZksPackedPublicKey = ZksPackedPublicKey
+typealias CLibZksPubkeyHash = ZksPubkeyHash
+typealias CLibZksSignature = ZksSignature
+
