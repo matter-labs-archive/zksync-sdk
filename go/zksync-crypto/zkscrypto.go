@@ -12,24 +12,11 @@ import (
 	"unsafe"
 )
 
-// MaxSignedMessageLen Maximum byte length of the message that can be signed.
-const MaxSignedMessageLen = 92
-
-// PackedSignatureLen Byte length of the signature. Signature contains r and s points.
-const PackedSignatureLen = 64
-
-// PrivateKeyLen Byte length of the private key.
-const PrivateKeyLen = 32
-
-// PubkeyHashLen Byte length of the public key hash.
-const PubkeyHashLen = 20
-
-// PublicKeyLen Byte length of the public key.
-const PublicKeyLen = 32
-
 var (
-	errSeedLen      = errors.New("Given seed is too short, length must be greater than 32")
-	errSignedMsgLen = errors.New("Musig message length must not be larger than 92")
+	errSeedLen      = errors.New("given seed is too short, length must be greater than 32")
+	errPrivateKey   = errors.New("error on private key generation")
+	errSignedMsgLen = errors.New("musig message length must not be larger than 92")
+	errSign         = errors.New("error on sign message")
 )
 
 func init() {
@@ -52,10 +39,12 @@ func NewPrivateKey(seed []byte) (*PrivateKey, error) {
 		switch result {
 		case 1:
 			return nil, errSeedLen
+		default:
+			return nil, errPrivateKey
 		}
 	}
 	data := unsafe.Pointer(&pointer.data)
-	return &PrivateKey{data: C.GoBytes(data, PrivateKeyLen)}, nil
+	return &PrivateKey{data: C.GoBytes(data, C.PRIVATE_KEY_LEN)}, nil
 }
 
 // Sign message with musig Schnorr signature scheme
@@ -72,10 +61,12 @@ func (pk *PrivateKey) Sign(message []byte) (*Signature, error) {
 		switch result {
 		case 1:
 			return nil, errSignedMsgLen
+		default:
+			return nil, errSign
 		}
 	}
 	data := unsafe.Pointer(&signatureC.data)
-	return &Signature{data: C.GoBytes(data, PackedSignatureLen)}, nil
+	return &Signature{data: C.GoBytes(data, C.PACKED_SIGNATURE_LEN)}, nil
 }
 
 // PublicKey generates public key from private key
@@ -87,10 +78,10 @@ func (pk *PrivateKey) PublicKey() (*PublicKey, error) {
 	pointer := C.struct_ZksPackedPublicKey{}
 	result := C.zks_crypto_private_key_to_public_key(&privateKeyC, &pointer)
 	if result != 0 {
-		return nil, errors.New("Error on public key generation")
+		return nil, errors.New("error on public key generation")
 	}
 	data := unsafe.Pointer(&pointer.data)
-	return &PublicKey{data: C.GoBytes(data, PublicKeyLen)}, nil
+	return &PublicKey{data: C.GoBytes(data, C.PUBLIC_KEY_LEN)}, nil
 }
 
 // HexString creates a hex string representation of a private key
@@ -119,7 +110,7 @@ func (pk *PublicKey) Hash() (*PublicKeyHash, error) {
 		return nil, errors.New("Error on public key hash generation")
 	}
 	data := unsafe.Pointer(&pointer.data)
-	return &PublicKeyHash{data: C.GoBytes(data, PubkeyHashLen)}, nil
+	return &PublicKeyHash{data: C.GoBytes(data, C.PUBKEY_HASH_LEN)}, nil
 }
 
 // HexString creates a hex string representation of a public key
